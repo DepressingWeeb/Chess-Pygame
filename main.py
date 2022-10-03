@@ -222,260 +222,24 @@ class Board:
         if row is None or col is None:
             return []
         if self.board[row][col] == 'p' and self.white_turn:
-            if self.check_valid(row - 1, col - 1) and self.board[row - 1][col - 1] != '' and self.check_diff_side(row,
-                                                                                                                  col,
-                                                                                                                  row - 1,
-                                                                                                                  col - 1):
-                legal_moves.append((row - 1, col - 1))
-            if self.check_valid(row - 1, col + 1) and self.board[row - 1][col + 1] != '' and self.check_diff_side(row,
-                                                                                                                  col,
-                                                                                                                  row - 1,
-                                                                                                                  col + 1):
-                legal_moves.append((row - 1, col + 1))
-            # check if it can be en passant move or not
-            if self.en_passant != (None, None):
-                r, c = self.en_passant
-                if abs(col - c) == 1 and r == row:
-                    legal_moves.append((row - 1, col + (c - col)))
-            # if the pawn is in the starting position
-            if row == 6:
-                if self.check_valid(row - 1, col) and self.board[row - 1][col] == '':
-                    legal_moves.append((row - 1, col))
-                if self.check_valid(row - 2, col) and self.board[row - 2][col] == '' and self.board[row - 1][col] == '':
-                    legal_moves.append((row - 2, col))
-
-            else:
-                if self.check_valid(row - 1, col) and self.board[row - 1][col] == '':
-                    legal_moves.append((row - 1, col))
-
+            legal_moves = self.get_legal_moves_white_pawn(row, col)
         elif self.board[row][col] == 'P' and not self.white_turn:
-            if self.check_valid(row + 1, col - 1) and self.board[row + 1][col - 1] != '' and self.check_diff_side(row,
-                                                                                                                  col,
-                                                                                                                  row + 1,
-                                                                                                                  col - 1):
-                legal_moves.append((row + 1, col - 1))
-            if self.check_valid(row + 1, col + 1) and self.board[row + 1][col + 1] != '' and self.check_diff_side(row,
-                                                                                                                  col,
-                                                                                                                  row + 1,
-                                                                                                                  col + 1):
-                legal_moves.append((row + 1, col + 1))
-            # check for en passant
-            if self.en_passant != (None, None):
-                r, c = self.en_passant
-                if abs(col - c) == 1 and r == row:
-                    legal_moves.append((row + 1, col + (c - col)))
-            # if the pawn is in the starting position
-            if row == 1:
-                if self.check_valid(row + 1, col) and self.board[row + 1][col] == '':
-                    legal_moves.append((row + 1, col))
-                if self.check_valid(row + 2, col) and self.board[row + 2][col] == '' and self.board[row + 1][col] == '':
-                    legal_moves.append((row + 2, col))
-
-            else:
-                if self.check_valid(row + 1, col) and self.board[row + 1][col] == '':
-                    legal_moves.append((row + 1, col))
+            legal_moves = self.get_legal_moves_black_pawn(row, col)
         # legal moves of white rook and black rook
         elif (self.board[row][col] == 'r' and self.white_turn) or (self.board[row][col] == 'R' and not self.white_turn):
-            for i in range(col + 1, 8):
-                if self.board[row][i] != '':
-                    if self.check_diff_side(row, col, row, i):
-                        legal_moves.append((row, i))
-                    break
-                legal_moves.append((row, i))
-            for i in range(col - 1, -1, -1):
-                if self.board[row][i] != '':
-                    if self.check_diff_side(row, col, row, i):
-                        legal_moves.append((row, i))
-                    break
-                legal_moves.append((row, i))
-            for i in range(row - 1, -1, -1):
-                if self.board[i][col] != '':
-                    if self.check_diff_side(row, col, i, col):
-                        legal_moves.append((i, col))
-                    break
-                legal_moves.append((i, col))
-            for i in range(row + 1, 8):
-                if self.board[i][col] != '':
-                    if self.check_diff_side(row, col, i, col):
-                        legal_moves.append((i, col))
-                    break
-                legal_moves.append((i, col))
+            legal_moves = self.get_legal_moves_rook(row, col)
         # legal moves of white bishop and black bishop
         elif (self.board[row][col] == 'b' and self.white_turn) or (self.board[row][col] == 'B' and not self.white_turn):
-            i = 1
-
-            while True:
-                if not self.check_valid(row - i, col - i):
-                    break
-                if self.board[row - i][col - i] != '':
-                    if self.check_diff_side(row, col, row - i, col - i):
-                        legal_moves.append((row - i, col - i))
-                    break
-                legal_moves.append((row - i, col - i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row + i, col - i):
-                    break
-                if self.board[row + i][col - i] != '':
-                    if self.check_diff_side(row, col, row + i, col - i):
-                        legal_moves.append((row + i, col - i))
-                    break
-                legal_moves.append((row + i, col - i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row + i, col + i):
-                    break
-                if self.board[row + i][col + i] != '':
-                    if self.check_diff_side(row, col, row + i, col + i):
-                        legal_moves.append((row + i, col + i))
-                    break
-                legal_moves.append((row + i, col + i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row - i, col + i):
-                    break
-                if self.board[row - i][col + i] != '':
-                    if self.check_diff_side(row, col, row - i, col + i):
-                        legal_moves.append((row - i, col + i))
-                    break
-                legal_moves.append((row - i, col + i))
-
-                i += 1
+            legal_moves = self.get_legal_moves_bishop(row, col)
         # legal moves of black and white knight
         elif (self.board[row][col] == 'n' and self.white_turn) or (self.board[row][col] == 'N' and not self.white_turn):
-            if self.check_valid(row + 2, col - 1) and (
-                    self.board[row + 2][col - 1] == '' or self.check_diff_side(row, col, row + 2, col - 1)):
-                legal_moves.append((row + 2, col - 1))
-            if self.check_valid(row + 2, col + 1) and (
-                    self.board[row + 2][col + 1] == '' or self.check_diff_side(row, col, row + 2, col + 1)):
-                legal_moves.append((row + 2, col + 1))
-            if self.check_valid(row - 2, col - 1) and (
-                    self.board[row - 2][col - 1] == '' or self.check_diff_side(row, col, row - 2, col - 1)):
-                legal_moves.append((row - 2, col - 1))
-            if self.check_valid(row - 2, col + 1) and (
-                    self.board[row - 2][col + 1] == '' or self.check_diff_side(row, col, row - 2, col + 1)):
-                legal_moves.append((row - 2, col + 1))
-            if self.check_valid(row + 1, col - 2) and (
-                    self.board[row + 1][col - 2] == '' or self.check_diff_side(row, col, row + 1, col - 2)):
-                legal_moves.append((row + 1, col - 2))
-            if self.check_valid(row + 1, col + 2) and (
-                    self.board[row + 1][col + 2] == '' or self.check_diff_side(row, col, row + 1, col + 2)):
-                legal_moves.append((row + 1, col + 2))
-            if self.check_valid(row - 1, col - 2) and (
-                    self.board[row - 1][col - 2] == '' or self.check_diff_side(row, col, row - 1, col - 2)):
-                legal_moves.append((row - 1, col - 2))
-            if self.check_valid(row - 1, col + 2) and (
-                    self.board[row - 1][col + 2] == '' or self.check_diff_side(row, col, row - 1, col + 2)):
-                legal_moves.append((row - 1, col + 2))
+            legal_moves = self.get_legal_moves_knight(row, col)
         # legal moves of white and black king
         elif (self.board[row][col] == 'k' and self.white_turn) or (self.board[row][col] == 'K' and not self.white_turn):
-            if self.check_valid(row, col + 1) and (
-                    self.board[row][col + 1] == '' or self.check_diff_side(row, col, row, col + 1)):
-                legal_moves.append((row, col + 1))
-            if self.check_valid(row, col - 1) and (
-                    self.board[row][col - 1] == '' or self.check_diff_side(row, col, row, col - 1)):
-                legal_moves.append((row, col - 1))
-            if self.check_valid(row - 1, col - 1) and (
-                    self.board[row - 1][col - 1] == '' or self.check_diff_side(row, col, row - 1, col - 1)):
-                legal_moves.append((row - 1, col - 1))
-            if self.check_valid(row - 1, col + 1) and (
-                    self.board[row - 1][col + 1] == '' or self.check_diff_side(row, col, row - 1, col + 1)):
-                legal_moves.append((row - 1, col + 1))
-            if self.check_valid(row - 1, col) and (
-                    self.board[row - 1][col] == '' or self.check_diff_side(row, col, row - 1, col)):
-                legal_moves.append((row - 1, col))
-            if self.check_valid(row + 1, col + 1) and (
-                    self.board[row + 1][col + 1] == '' or self.check_diff_side(row, col, row + 1, col + 1)):
-                legal_moves.append((row + 1, col + 1))
-            if self.check_valid(row + 1, col) and (
-                    self.board[row + 1][col] == '' or self.check_diff_side(row, col, row + 1, col)):
-                legal_moves.append((row + 1, col))
-            if self.check_valid(row + 1, col - 1) and (
-                    self.board[row + 1][col - 1] == '' or self.check_diff_side(row, col, row + 1, col - 1)):
-                legal_moves.append((row + 1, col - 1))
+            legal_moves = self.get_legal_moves_king(row, col)
         # legal moves of white queen and black queen
         elif (self.board[row][col] == 'q' and self.white_turn) or (self.board[row][col] == 'Q' and not self.white_turn):
-            for i in range(col + 1, 8):
-                if self.board[row][i] != '':
-                    if self.check_diff_side(row, col, row, i):
-                        legal_moves.append((row, i))
-                    break
-                legal_moves.append((row, i))
-            for i in range(col - 1, -1, -1):
-                if self.board[row][i] != '':
-                    if self.check_diff_side(row, col, row, i):
-                        legal_moves.append((row, i))
-                    break
-                legal_moves.append((row, i))
-            for i in range(row - 1, -1, -1):
-                if self.board[i][col] != '':
-                    if self.check_diff_side(row, col, i, col):
-                        legal_moves.append((i, col))
-                    break
-                legal_moves.append((i, col))
-            for i in range(row + 1, 8):
-                if self.board[i][col] != '':
-                    if self.check_diff_side(row, col, i, col):
-                        legal_moves.append((i, col))
-                    break
-                legal_moves.append((i, col))
-            i = 1
-
-            while True:
-                if not self.check_valid(row - i, col - i):
-                    break
-                if self.board[row - i][col - i] != '':
-                    if self.check_diff_side(row, col, row - i, col - i):
-                        legal_moves.append((row - i, col - i))
-                    break
-                legal_moves.append((row - i, col - i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row + i, col - i):
-                    break
-                if self.board[row + i][col - i] != '':
-                    if self.check_diff_side(row, col, row + i, col - i):
-                        legal_moves.append((row + i, col - i))
-                    break
-                legal_moves.append((row + i, col - i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row + i, col + i):
-                    break
-                if self.board[row + i][col + i] != '':
-                    if self.check_diff_side(row, col, row + i, col + i):
-                        legal_moves.append((row + i, col + i))
-                    break
-                legal_moves.append((row + i, col + i))
-
-                i += 1
-            i = 1
-
-            while True:
-                if not self.check_valid(row - i, col + i):
-                    break
-                if self.board[row - i][col + i] != '':
-                    if self.check_diff_side(row, col, row - i, col + i):
-                        legal_moves.append((row - i, col + i))
-                    break
-                legal_moves.append((row - i, col + i))
-
-                i += 1
+            legal_moves = self.get_legal_moves_queen(row, col)
 
         final_legal_moves = []
         for move in legal_moves:
@@ -506,6 +270,207 @@ class Board:
             if check_short_castle:
                 final_legal_moves.append((0, 6))
         return final_legal_moves
+
+    def get_legal_moves_knight(self, row, col):
+        legal_moves = []
+        if self.check_valid(row + 2, col - 1) and (
+                self.board[row + 2][col - 1] == '' or self.check_diff_side(row, col, row + 2, col - 1)):
+            legal_moves.append((row + 2, col - 1))
+        if self.check_valid(row + 2, col + 1) and (
+                self.board[row + 2][col + 1] == '' or self.check_diff_side(row, col, row + 2, col + 1)):
+            legal_moves.append((row + 2, col + 1))
+        if self.check_valid(row - 2, col - 1) and (
+                self.board[row - 2][col - 1] == '' or self.check_diff_side(row, col, row - 2, col - 1)):
+            legal_moves.append((row - 2, col - 1))
+        if self.check_valid(row - 2, col + 1) and (
+                self.board[row - 2][col + 1] == '' or self.check_diff_side(row, col, row - 2, col + 1)):
+            legal_moves.append((row - 2, col + 1))
+        if self.check_valid(row + 1, col - 2) and (
+                self.board[row + 1][col - 2] == '' or self.check_diff_side(row, col, row + 1, col - 2)):
+            legal_moves.append((row + 1, col - 2))
+        if self.check_valid(row + 1, col + 2) and (
+                self.board[row + 1][col + 2] == '' or self.check_diff_side(row, col, row + 1, col + 2)):
+            legal_moves.append((row + 1, col + 2))
+        if self.check_valid(row - 1, col - 2) and (
+                self.board[row - 1][col - 2] == '' or self.check_diff_side(row, col, row - 1, col - 2)):
+            legal_moves.append((row - 1, col - 2))
+        if self.check_valid(row - 1, col + 2) and (
+                self.board[row - 1][col + 2] == '' or self.check_diff_side(row, col, row - 1, col + 2)):
+            legal_moves.append((row - 1, col + 2))
+        return legal_moves
+
+    def get_legal_moves_rook(self, row, col):
+        legal_moves = []
+        for i in range(col + 1, 8):
+            if self.board[row][i] != '':
+                if self.check_diff_side(row, col, row, i):
+                    legal_moves.append((row, i))
+                break
+            legal_moves.append((row, i))
+        for i in range(col - 1, -1, -1):
+            if self.board[row][i] != '':
+                if self.check_diff_side(row, col, row, i):
+                    legal_moves.append((row, i))
+                break
+            legal_moves.append((row, i))
+        for i in range(row - 1, -1, -1):
+            if self.board[i][col] != '':
+                if self.check_diff_side(row, col, i, col):
+                    legal_moves.append((i, col))
+                break
+            legal_moves.append((i, col))
+        for i in range(row + 1, 8):
+            if self.board[i][col] != '':
+                if self.check_diff_side(row, col, i, col):
+                    legal_moves.append((i, col))
+                break
+            legal_moves.append((i, col))
+        return legal_moves
+
+    def get_legal_moves_king(self, row, col):
+        legal_moves = []
+        if self.check_valid(row, col + 1) and (
+                self.board[row][col + 1] == '' or self.check_diff_side(row, col, row, col + 1)):
+            legal_moves.append((row, col + 1))
+        if self.check_valid(row, col - 1) and (
+                self.board[row][col - 1] == '' or self.check_diff_side(row, col, row, col - 1)):
+            legal_moves.append((row, col - 1))
+        if self.check_valid(row - 1, col - 1) and (
+                self.board[row - 1][col - 1] == '' or self.check_diff_side(row, col, row - 1, col - 1)):
+            legal_moves.append((row - 1, col - 1))
+        if self.check_valid(row - 1, col + 1) and (
+                self.board[row - 1][col + 1] == '' or self.check_diff_side(row, col, row - 1, col + 1)):
+            legal_moves.append((row - 1, col + 1))
+        if self.check_valid(row - 1, col) and (
+                self.board[row - 1][col] == '' or self.check_diff_side(row, col, row - 1, col)):
+            legal_moves.append((row - 1, col))
+        if self.check_valid(row + 1, col + 1) and (
+                self.board[row + 1][col + 1] == '' or self.check_diff_side(row, col, row + 1, col + 1)):
+            legal_moves.append((row + 1, col + 1))
+        if self.check_valid(row + 1, col) and (
+                self.board[row + 1][col] == '' or self.check_diff_side(row, col, row + 1, col)):
+            legal_moves.append((row + 1, col))
+        if self.check_valid(row + 1, col - 1) and (
+                self.board[row + 1][col - 1] == '' or self.check_diff_side(row, col, row + 1, col - 1)):
+            legal_moves.append((row + 1, col - 1))
+        return legal_moves
+
+    def get_legal_moves_bishop(self, row, col):
+        legal_moves = []
+        i = 1
+
+        while True:
+            if not self.check_valid(row - i, col - i):
+                break
+            if self.board[row - i][col - i] != '':
+                if self.check_diff_side(row, col, row - i, col - i):
+                    legal_moves.append((row - i, col - i))
+                break
+            legal_moves.append((row - i, col - i))
+
+            i += 1
+        i = 1
+
+        while True:
+            if not self.check_valid(row + i, col - i):
+                break
+            if self.board[row + i][col - i] != '':
+                if self.check_diff_side(row, col, row + i, col - i):
+                    legal_moves.append((row + i, col - i))
+                break
+            legal_moves.append((row + i, col - i))
+
+            i += 1
+        i = 1
+
+        while True:
+            if not self.check_valid(row + i, col + i):
+                break
+            if self.board[row + i][col + i] != '':
+                if self.check_diff_side(row, col, row + i, col + i):
+                    legal_moves.append((row + i, col + i))
+                break
+            legal_moves.append((row + i, col + i))
+
+            i += 1
+        i = 1
+
+        while True:
+            if not self.check_valid(row - i, col + i):
+                break
+            if self.board[row - i][col + i] != '':
+                if self.check_diff_side(row, col, row - i, col + i):
+                    legal_moves.append((row - i, col + i))
+                break
+            legal_moves.append((row - i, col + i))
+
+            i += 1
+
+        return legal_moves
+
+    def get_legal_moves_white_pawn(self, row, col):
+        legal_moves = []
+        if self.check_valid(row - 1, col - 1) and self.board[row - 1][col - 1] != '' and self.check_diff_side(row,
+                                                                                                              col,
+                                                                                                              row - 1,
+                                                                                                              col - 1):
+            legal_moves.append((row - 1, col - 1))
+        if self.check_valid(row - 1, col + 1) and self.board[row - 1][col + 1] != '' and self.check_diff_side(row,
+                                                                                                              col,
+                                                                                                              row - 1,
+                                                                                                              col + 1):
+            legal_moves.append((row - 1, col + 1))
+        # check if it can be en passant move or not
+        if self.en_passant != (None, None):
+            r, c = self.en_passant
+            if abs(col - c) == 1 and r == row:
+                legal_moves.append((row - 1, col + (c - col)))
+        # if the pawn is in the starting position
+        if row == 6:
+            if self.check_valid(row - 1, col) and self.board[row - 1][col] == '':
+                legal_moves.append((row - 1, col))
+            if self.check_valid(row - 2, col) and self.board[row - 2][col] == '' and self.board[row - 1][col] == '':
+                legal_moves.append((row - 2, col))
+
+        else:
+            if self.check_valid(row - 1, col) and self.board[row - 1][col] == '':
+                legal_moves.append((row - 1, col))
+
+        return legal_moves
+
+    def get_legal_moves_black_pawn(self, row, col):
+        legal_moves = []
+        if self.check_valid(row + 1, col - 1) and self.board[row + 1][col - 1] != '' and self.check_diff_side(row,
+                                                                                                              col,
+                                                                                                              row + 1,
+                                                                                                              col - 1):
+            legal_moves.append((row + 1, col - 1))
+        if self.check_valid(row + 1, col + 1) and self.board[row + 1][col + 1] != '' and self.check_diff_side(row,
+                                                                                                              col,
+                                                                                                              row + 1,
+                                                                                                              col + 1):
+            legal_moves.append((row + 1, col + 1))
+        # check for en passant
+        if self.en_passant != (None, None):
+            r, c = self.en_passant
+            if abs(col - c) == 1 and r == row:
+                legal_moves.append((row + 1, col + (c - col)))
+        # if the pawn is in the starting position
+        if row == 1:
+            if self.check_valid(row + 1, col) and self.board[row + 1][col] == '':
+                legal_moves.append((row + 1, col))
+            if self.check_valid(row + 2, col) and self.board[row + 2][col] == '' and self.board[row + 1][col] == '':
+                legal_moves.append((row + 2, col))
+
+        else:
+            if self.check_valid(row + 1, col) and self.board[row + 1][col] == '':
+                legal_moves.append((row + 1, col))
+
+        return legal_moves
+
+    def get_legal_moves_queen(self, row, col):
+        legal_moves = self.get_legal_moves_rook(row, col) + self.get_legal_moves_bishop(row, col)
+        return legal_moves
 
     def draw_legal_moves(self):
         curr_row, curr_col = self.start_move
