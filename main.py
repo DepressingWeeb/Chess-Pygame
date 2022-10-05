@@ -43,6 +43,7 @@ class Board:
         self.last_move = [(None, None), (None, None)]
         self.move_made = []
         self.en_passant = (None, None)
+        self.en_passant_history = []
         self.black_bishop_img = pygame.transform.scale(pygame.image.load('resources/resources/black_bishop.png'),
                                                        (WIDTH // 9, HEIGHT // 9))
         self.white_bishop_img = pygame.transform.scale(pygame.image.load('resources/resources/white_bishop.png'),
@@ -86,6 +87,7 @@ class Board:
             ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
             ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
         ]
+        self.board_history = []
 
     def draw_board(self):
         for i in range(8):
@@ -153,7 +155,7 @@ class Board:
     def check_valid(row, col):
         return 0 <= row <= 7 and 0 <= col <= 7
 
-    def move(self):
+    def check_mouse_input(self):
         if pygame.mouse.get_pressed()[0] and self.delay == -1:
             x, y = pygame.mouse.get_pos()
             row, col = y // (HEIGHT // 8), x // (WIDTH // 8)
@@ -164,81 +166,147 @@ class Board:
             else:
                 if (row, col) == self.start_move:
                     return
+                elif not self.check_diff_side(self.start_move[0], self.start_move[1], row, col) and self.board[row][
+                    col] != '':
+                    self.start_move = (row, col)
                 else:
-                    if (row, col) in self.get_legal_moves(self.start_move[0], self.start_move[1]):
-                        self.destination_move = (row, col)
-                        start_row, start_col = self.start_move
-                        end_row, end_col = self.destination_move
-                        # check if the move is castle or not,if it is,move the rook and king to a specific square
-                        if self.board[start_row][start_col] == 'k':
-                            check_long_castle, check_short_castle = self.check_castling_right()
-                            if check_long_castle and (end_row, end_col) == (7, 2):
-                                self.board[7][0], self.board[7][3] = '', self.board[7][0]
-                            elif check_short_castle and (end_row, end_col) == (7, 6):
-                                self.board[7][7], self.board[7][5] = '', self.board[7][7]
-                        elif self.board[start_row][start_col] == 'K':
-                            check_long_castle, check_short_castle = self.check_castling_right()
-                            if check_long_castle and (end_row, end_col) == (0, 2):
-                                self.board[0][0], self.board[0][3] = '', self.board[0][0]
-                            elif check_short_castle and (end_row, end_col) == (0, 6):
-                                self.board[0][7], self.board[0][5] = '', self.board[0][7]
-                        # check for en passant
-                        if self.board[start_row][start_col].lower() == 'p' and self.en_passant != (None, None):
-                            r, c = self.en_passant
-                            if self.white_turn and end_row == r - 1 and end_col == c:
-                                self.board[r][c] = ''
-                            elif (not self.white_turn) and end_row == r + 1 and end_col == c:
-                                self.board[r][c] = ''
-                        if self.board[start_row][start_col].lower() == 'p' and abs(end_row - start_row) == 2:
-                            self.en_passant = (end_row, end_col)
-                        else:
-                            self.en_passant = (None, None)
-
-                        self.board[start_row][start_col], self.board[end_row][end_col] = '', self.board[start_row][
-                            start_col]
-                        if self.board[end_row][end_col].lower() == 'p' and (end_row == 7 or end_row == 0):
-                            self.board[end_row][end_col] = self.pawn_promotion(end_row, end_col)
-
-                        self.last_move = [self.start_move, self.destination_move]
-                        self.move_made.append(self.last_move)
-                        self.white_turn = not self.white_turn
-                        if self.is_checkmate():
-                            pygame.quit()
-                            sys.exit()
-                        self.start_move = (None, None)
-                        self.destination_move = (None, None)
-                        self.delay = 0
-
-                    elif not self.check_diff_side(self.start_move[0], self.start_move[1], row, col):
-                        self.start_move = (row, col)
-
+                    self.move(self.start_move, (row, col))
+        if pygame.key.get_pressed()[K_u] and self.delay == -1:
+            self.undo_move()
         if self.delay >= 0:
             self.delay += 1
             if self.delay == 15:
                 self.delay = -1
 
-    def get_legal_moves(self, row, col):
+    def move(self, start_move, destination_move):
+        row, col = destination_move
+        if (row, col) in self.get_legal_moves(start_move[0], start_move[1], self.white_turn):
+            self.destination_move = (row, col)
+            start_row, start_col = start_move
+            end_row, end_col = destination_move
+            # check if the move is castle or not,if it is,move the rook and king to a specific square
+            if self.board[start_row][start_col] == 'k':
+                check_long_castle, check_short_castle = self.check_castling_right()
+                if check_long_castle and (end_row, end_col) == (7, 2):
+                    self.board[7][0], self.board[7][3] = '', self.board[7][0]
+                elif check_short_castle and (end_row, end_col) == (7, 6):
+                    self.board[7][7], self.board[7][5] = '', self.board[7][7]
+            elif self.board[start_row][start_col] == 'K':
+                check_long_castle, check_short_castle = self.check_castling_right()
+                if check_long_castle and (end_row, end_col) == (0, 2):
+                    self.board[0][0], self.board[0][3] = '', self.board[0][0]
+                elif check_short_castle and (end_row, end_col) == (0, 6):
+                    self.board[0][7], self.board[0][5] = '', self.board[0][7]
+            # check for en passant
+            if self.board[start_row][start_col].lower() == 'p' and self.en_passant != (None, None):
+                r, c = self.en_passant
+                if self.white_turn and end_row == r - 1 and end_col == c:
+                    self.board[r][c] = ''
+                elif (not self.white_turn) and end_row == r + 1 and end_col == c:
+                    self.board[r][c] = ''
+            if self.board[start_row][start_col].lower() == 'p' and abs(end_row - start_row) == 2:
+                self.en_passant = (end_row, end_col)
+                self.en_passant_history.append(self.en_passant)
+            else:
+                self.en_passant = (None, None)
+                self.en_passant_history.append(self.en_passant)
+
+            self.board[start_row][start_col], self.board[end_row][end_col] = '', self.board[start_row][
+                start_col]
+            if self.board[end_row][end_col].lower() == 'p' and (end_row == 7 or end_row == 0):
+                self.board[end_row][end_col] = self.pawn_promotion(end_row, end_col)
+            self.copy_board()
+            self.last_move = [start_move, destination_move]
+            self.move_made.append(self.last_move)
+            self.white_turn = not self.white_turn
+            if self.is_checkmate():
+                pygame.quit()
+                sys.exit()
+            self.start_move = (None, None)
+            self.destination_move = (None, None)
+            self.delay = 0
+
+    def copy_board(self):
+
+        tmp = []
+        for i in range(8):
+            lst_tmp = []
+            for j in range(8):
+                lst_tmp.append(self.board[i][j])
+            tmp.append(lst_tmp)
+        self.board_history.append(tmp)
+
+    def undo_move(self):
+        try:
+            self.white_turn = not self.white_turn
+            self.start_move = (None, None)
+            self.destination_move = (None, None)
+            self.move_made.pop()
+            self.board_history.pop()
+            # self.board=self.board_history[-1].copy()
+            tmp = []
+            for i in range(8):
+                lst_tmp = []
+                for j in range(8):
+                    lst_tmp.append(self.board_history[-1][i][j])
+                tmp.append(lst_tmp)
+            self.board = tmp
+
+            self.en_passant_history.pop()
+            self.en_passant = self.en_passant_history[-1]
+            self.delay = 0
+            # print(len(self.board_history))
+            for board in self.board_history:
+                self.print_board(board)
+            # print(self.en_passant_history)
+        except:
+            self.__init__()
+
+    def print_board(self, board):
+        for i in range(8):
+            for j in range(8):
+                if board[i][j] != '':
+                    print(board[i][j], end='')
+                else:
+                    print(' ', end='')
+            print()
+
+    def get_all_legal_moves(self, white_turn):
+        legal_moves = []
+        for i in range(8):
+            for j in range(8):
+                if white_turn and self.board[i][j].islower():
+                    moves = self.get_legal_moves(i, j, white_turn)
+                    for move in moves:
+                        legal_moves.append([(i, j), move])
+                if not white_turn and self.board[i][j].isupper():
+                    moves = self.get_legal_moves(i, j, white_turn)
+                    for move in moves:
+                        legal_moves.append([(i, j), move])
+        return legal_moves
+
+    def get_legal_moves(self, row, col, white_turn):
         legal_moves = []
         if row is None or col is None:
             return []
-        if self.board[row][col] == 'p' and self.white_turn:
+        if self.board[row][col] == 'p' and white_turn:
             legal_moves = self.get_legal_moves_white_pawn(row, col)
-        elif self.board[row][col] == 'P' and not self.white_turn:
+        elif self.board[row][col] == 'P' and not white_turn:
             legal_moves = self.get_legal_moves_black_pawn(row, col)
         # legal moves of white rook and black rook
-        elif (self.board[row][col] == 'r' and self.white_turn) or (self.board[row][col] == 'R' and not self.white_turn):
+        elif (self.board[row][col] == 'r' and white_turn) or (self.board[row][col] == 'R' and not white_turn):
             legal_moves = self.get_legal_moves_rook(row, col)
         # legal moves of white bishop and black bishop
-        elif (self.board[row][col] == 'b' and self.white_turn) or (self.board[row][col] == 'B' and not self.white_turn):
+        elif (self.board[row][col] == 'b' and white_turn) or (self.board[row][col] == 'B' and not white_turn):
             legal_moves = self.get_legal_moves_bishop(row, col)
         # legal moves of black and white knight
-        elif (self.board[row][col] == 'n' and self.white_turn) or (self.board[row][col] == 'N' and not self.white_turn):
+        elif (self.board[row][col] == 'n' and white_turn) or (self.board[row][col] == 'N' and not white_turn):
             legal_moves = self.get_legal_moves_knight(row, col)
         # legal moves of white and black king
-        elif (self.board[row][col] == 'k' and self.white_turn) or (self.board[row][col] == 'K' and not self.white_turn):
+        elif (self.board[row][col] == 'k' and white_turn) or (self.board[row][col] == 'K' and not white_turn):
             legal_moves = self.get_legal_moves_king(row, col)
         # legal moves of white queen and black queen
-        elif (self.board[row][col] == 'q' and self.white_turn) or (self.board[row][col] == 'Q' and not self.white_turn):
+        elif (self.board[row][col] == 'q' and white_turn) or (self.board[row][col] == 'Q' and not white_turn):
             legal_moves = self.get_legal_moves_queen(row, col)
 
         final_legal_moves = []
@@ -247,15 +315,15 @@ class Board:
             r1, c1 = move
             temp_1, temp_2 = self.board[r][c], self.board[r1][c1]
             self.board[r][c], self.board[r1][c1] = '', self.board[r][c]
-            self.white_turn = not self.white_turn
-            if self.white_turn:
+            white_turn = not white_turn
+            if white_turn:
                 if self.get_king_position('BLACK') not in self.get_white_attack_square():
                     final_legal_moves.append(move)
             else:
                 if self.get_king_position('WHITE') not in self.get_black_attack_square():
                     final_legal_moves.append(move)
             self.board[r][c], self.board[r1][c1] = temp_1, temp_2
-            self.white_turn = not self.white_turn
+            white_turn = not white_turn
         # check if it can be a castling move or not
         if self.board[row][col] == 'k':
             check_long_castle, check_short_castle = self.check_castling_right()
@@ -424,7 +492,12 @@ class Board:
         if self.en_passant != (None, None):
             r, c = self.en_passant
             if abs(col - c) == 1 and r == row:
-                legal_moves.append((row - 1, col + (c - col)))
+                self.board[r][c] = ''
+                self.board[row][col],self.board[row-1][col+(c-col)]='','p'
+                if self.get_king_position('WHITE') not in self.get_black_attack_square():
+                    legal_moves.append((row - 1, col + (c - col)))
+                self.board[r][c] = 'P'
+                self.board[row][col],self.board[row-1][col+(c-col)]='p',''
         # if the pawn is in the starting position
         if row == 6:
             if self.check_valid(row - 1, col) and self.board[row - 1][col] == '':
@@ -454,7 +527,13 @@ class Board:
         if self.en_passant != (None, None):
             r, c = self.en_passant
             if abs(col - c) == 1 and r == row:
-                legal_moves.append((row + 1, col + (c - col)))
+                self.board[r][c] = ''
+                self.board[row][col],self.board[row+1][col+(c-col)]='','P'
+                if self.get_king_position('BLACK') not in self.get_white_attack_square():
+                    legal_moves.append((row + 1, col + (c - col)))
+                    #print(1)
+                self.board[r][c] = 'p'
+                self.board[row][col],self.board[row+1][col+(c-col)]='P',''
         # if the pawn is in the starting position
         if row == 1:
             if self.check_valid(row + 1, col) and self.board[row + 1][col] == '':
@@ -474,7 +553,7 @@ class Board:
 
     def draw_legal_moves(self):
         curr_row, curr_col = self.start_move
-        legal_moves = self.get_legal_moves(curr_row, curr_col)
+        legal_moves = self.get_legal_moves(curr_row, curr_col, self.white_turn)
         for row, col in legal_moves:
             center = self.board_coordinate[row][col].center
             pygame.draw.circle(SCREEN, GREEN, center, 10)
@@ -714,7 +793,7 @@ class Board:
                 for i in range(8):
                     for j in range(8):
                         if self.board[i][j] != '' and self.board[i][j].islower():
-                            legal_moves += self.get_legal_moves(i, j)
+                            legal_moves += self.get_legal_moves(i, j, self.white_turn)
 
                 if len(legal_moves) == 0:
                     return True
@@ -725,7 +804,7 @@ class Board:
                 for i in range(8):
                     for j in range(8):
                         if self.board[i][j] != '' and self.board[i][j].isupper():
-                            legal_moves += self.get_legal_moves(i, j)
+                            legal_moves += self.get_legal_moves(i, j, self.white_turn)
                 if len(legal_moves) == 0:
                     return True
                 return False
@@ -733,8 +812,11 @@ class Board:
     def check_castling_right(self):
         if self.is_in_check():
             return [False, False]
+
         ans = [True, True]
         if self.white_turn:
+            if self.get_king_position('WHITE')!=(7,4):
+                return [False,False]
             # check short and long castle
             for start, end in self.move_made:
                 if start == (7, 4):
@@ -751,11 +833,13 @@ class Board:
                 if self.board[7][5] != '' or self.board[7][6] != '':
                     ans[1] = False
             if ans[0]:
-                if (7, 1) in attack_squares or (7, 2) in attack_squares or (7, 3) in attack_squares:
+                if (7, 2) in attack_squares or (7, 3) in attack_squares:
                     ans[0] = False
                 if self.board[7][1] != '' or self.board[7][2] != '' or self.board[7][3] != '':
                     ans[0] = False
         else:
+            if self.get_king_position('BLACK')!=(0,4):
+                return [False,False]
             for start, end in self.move_made:
                 if start == (0, 4):
                     return [False, False]
@@ -771,7 +855,7 @@ class Board:
                 if self.board[0][5] != '' or self.board[0][6] != '':
                     ans[1] = False
             if ans[0]:
-                if (0, 1) in attack_squares or (0, 2) in attack_squares or (0, 3) in attack_squares:
+                if (0, 2) in attack_squares or (0, 3) in attack_squares:
                     ans[0] = False
                 if self.board[0][1] != '' or self.board[0][2] != '' or self.board[0][3] != '':
                     ans[0] = False
@@ -857,7 +941,7 @@ def main_loop():
         SCREEN.fill(WHITE)
         board.draw_board()
         board.draw_pieces()
-        board.move()
+        board.check_mouse_input()
         board.draw_legal_moves()
         check_quit_game()
         pygame.display.update()
@@ -871,4 +955,5 @@ def check_quit_game():
             sys.exit()
 
 
+#board.test()
 main_loop()
