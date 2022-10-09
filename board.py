@@ -192,8 +192,6 @@ class Board:
             self.copy_board()
             self.white_turn = not self.white_turn
             if self.is_checkmate():
-                global game
-                game = False
                 pygame.quit()
 
             self.start_move = (None, None)

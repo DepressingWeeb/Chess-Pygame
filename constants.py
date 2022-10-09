@@ -1,12 +1,18 @@
 import pygame
 from pygame.locals import *
+
 WIDTH = 600
 HEIGHT = 600
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
+LIME = (50, 205, 50)
+LIGHT_GREEN = (144, 238, 144)
+LIGHT_YELLOW = (240, 230, 140)
+ORANGE = (255,165,0)
 RED = (255, 0, 0)
-YELLOW = (255, 238, 170, 0.5)
+YELLOW = (255, 255, 51)
+LYNCH = (108, 122, 137)
 SQUARES = {
     (0, 0): "a8", (0, 1): "b8", (0, 2): "c8", (0, 3): "d8", (0, 4): "e8", (0, 5): "f8", (0, 6): "g8",
     (0, 7): "h8",

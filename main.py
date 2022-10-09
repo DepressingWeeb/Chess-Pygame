@@ -17,26 +17,28 @@ def main_loop():
             break
 
 
-
 # board.test()
-if __name__=='__main__':
+if __name__ == '__main__':
     import multiprocessing
     from constants import *
     from board import Board
     from utils import *
     from analysis import *
     from analysisUI import *
-    #SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-    #CLOCK = pygame.time.Clock()
-    board=Board()
+
+    board = Board()
     game = True
     pygame.init()
     main_loop()
     q = multiprocessing.Queue()
-    p1 = multiprocessing.Process(target=analysis_waiting, args=(q,))
-    p2 = multiprocessing.Process(target=analysis, args=(board.move_made_in_uci, q))
+    acc_white=multiprocessing.Value('f')
+    acc_black=multiprocessing.Value('f')
+    count_type_white=multiprocessing.Array('i',6)
+    count_type_black = multiprocessing.Array('i', 6)
+    p1 = multiprocessing.Process(target=analysis_waiting, args=(len(board.move_made_in_uci),q))
+    p2 = multiprocessing.Process(target=analysis, args=(board.move_made_in_uci, q,acc_white,acc_black,count_type_white,count_type_black))
     p1.start()
     p2.start()
     p1.join()
     p2.join()
-
+    analysis_ui(acc_white.value,acc_black.value,count_type_white,count_type_black)
