@@ -68,15 +68,13 @@ class Engine:
         number_of_moves = best + excellent + good + inaccuracy + mistake + blunder
         # coefficient:
         #   best: 1.0
-        #   excellent: 0.925
-        #   good: 0.75
-        #   inaccuracy : 0.5
+        #   excellent: 0.9
+        #   good: 0.725
+        #   inaccuracy : 0.45
         #   mistake: 0.25
         #   blunder: 0.0
 
         return (best + excellent * 0.9 + good * 0.725 + inaccuracy * 0.45 + mistake * 0.25) / number_of_moves * 100
-
-        pass
 
     @staticmethod
     # method to classify the type of move like best,good,mistake etc depends on the eval before and after the move
@@ -136,11 +134,11 @@ class Engine:
             diff = best_move_eval - your_move_eval
             if diff <= 0.3:
                 return 0
-            if diff <= 1:
+            if diff <= 0.7:
                 return 1
-            if diff <= 1.5:
+            if diff <= 1.4:
                 return 2
-            if diff <= 2.5:
+            if diff <= 2.75:
                 return 3
             if diff <= 4:
                 return 4
@@ -153,9 +151,9 @@ class Engine:
             if your_move_eval <= -10:
                 return 1
             ratio = best_move_eval / your_move_eval
-            if ratio >= 0.8:
+            if ratio >= 0.85:
                 return 1
-            if ratio >= 0.7:
+            if ratio >= 0.75:
                 return 2
             if ratio >= 0.35:
                 return 3
