@@ -59,7 +59,7 @@ class Board:
         ]
         self.board_history = []
 
-    def draw_board(self):
+    def draw_board(self,SCREEN=SCREEN):
         for i in range(8):
             for j in range(8):
                 if (i + j) % 2 == 0:
@@ -77,7 +77,7 @@ class Board:
                         x, y = self.board_coordinate[i][j].bottomright
                         create_text(SCREEN, chr(97 + j), (x - 10, y - 15), fontSize=15)
 
-    def draw_pieces(self):
+    def draw_pieces(self,SCREEN=SCREEN):
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] == 'R':
@@ -148,7 +148,7 @@ class Board:
             if self.delay == 15:
                 self.delay = -1
 
-    def move(self, start_move, destination_move):
+    def move(self, start_move, destination_move,promote=None,is_analyzing=False):
         row, col = destination_move
         if (row, col) in self.get_legal_moves(start_move[0], start_move[1], self.white_turn):
             self.destination_move = (row, col)
@@ -187,11 +187,11 @@ class Board:
             self.move_made.append(self.last_move)
             self.move_made_in_uci.append(SQUARES[start_move] + SQUARES[destination_move])
             if self.board[end_row][end_col].lower() == 'p' and (end_row == 7 or end_row == 0):
-                self.board[end_row][end_col] = self.pawn_promotion(end_row, end_col)
+                self.board[end_row][end_col] = promote if promote is not None else self.pawn_promotion(end_row, end_col)
                 self.move_made_in_uci[-1] += self.board[end_row][end_col]
             self.copy_board()
             self.white_turn = not self.white_turn
-            if self.is_checkmate():
+            if self.is_checkmate() and not is_analyzing:
                 pygame.quit()
 
             self.start_move = (None, None)
@@ -898,7 +898,7 @@ class Board:
             pygame.display.update()
             CLOCK.tick(120)
 
-    def draw_arrow(self):
+    def draw_arrow(self,SCREEN=SCREEN):
         def arrow(screen, lcolor, tricolor, start, end, trirad, thickness=2):
             rad = math.pi / 180
             pygame.draw.line(screen, lcolor, start, end, thickness)
