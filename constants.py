@@ -9,7 +9,7 @@ GREEN = (0, 255, 0)
 LIME = (50, 205, 50)
 LIGHT_GREEN = (144, 238, 144)
 LIGHT_YELLOW = (240, 230, 140)
-ORANGE = (255,165,0)
+ORANGE = (255, 165, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 51)
 LYNCH = (108, 122, 137)
@@ -31,5 +31,4 @@ SQUARES = {
     (7, 0): "a1", (7, 1): "b1", (7, 2): "c1", (7, 3): "d1", (7, 4): "e1", (7, 5): "f1", (7, 6): "g1",
     (7, 7): "h1",
 }
-SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-CLOCK = pygame.time.Clock()
+SQUARES_REVERSED = {value: key for key, value in SQUARES.items()}

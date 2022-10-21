@@ -24,24 +24,24 @@ class AnalysisBoard(Board):
             return
         keys = pygame.key.get_pressed()
         if keys[K_LEFT]:
-            if self.index==0:
-                self.__init__(self.move_made_analysis,self.move_made_in_uci_analysis,self.types)
+            if self.index == 0:
+                self.__init__(self.move_made_analysis, self.move_made_in_uci_analysis, self.types)
             else:
                 self.undo_move()
             self.index = max(self.index - 1, 0)
-            self.delay=0
+            self.delay = 0
         elif keys[K_RIGHT]:
             if self.move_made_in_uci_analysis[self.index][-1].isdigit():
-                self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1],None,True)
+                self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1], None, True)
                 self.delay = 0
             else:
                 self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1],
-                          self.move_made_in_uci_analysis[self.index][-1],True)
+                          self.move_made_in_uci_analysis[self.index][-1], True)
                 self.delay = 0
-            self.index = min(self.index+1,len(self.move_made_analysis)-1)
+            self.index = min(self.index + 1, len(self.move_made_analysis) - 1)
 
     def draw_label(self, SCREEN=SCREEN):
-        if self.index==0:
+        if self.index == 0:
             return
         type_dict = {
             0: self.best_img,
@@ -51,6 +51,6 @@ class AnalysisBoard(Board):
             4: self.mistake_img,
             5: self.blunder_img
         }
-        row, col = self.move_made_analysis[self.index-1][1]
-        rect = type_dict[self.types[self.index-1]].get_rect(center=self.board_coordinate[row][col].topright)
-        SCREEN.blit(type_dict[self.types[self.index-1]], rect)
+        row, col = self.move_made_analysis[self.index - 1][1]
+        rect = type_dict[self.types[self.index - 1]].get_rect(center=self.board_coordinate[row][col].topright)
+        SCREEN.blit(type_dict[self.types[self.index - 1]], rect)

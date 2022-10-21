@@ -31,6 +31,10 @@ class Engine:
     def uci(self):
         self.command('uci\n', 'uciok')
 
+    def set_difficulty(self, difficulty_level=4):
+        self.process.stdin.write(f'setoption name skill level value {difficulty_level}\n'.encode('utf-8'))
+        self.process.stdin.flush()
+
     def eval(self, moves_made_in_uci):
         # set stating position
         self.process.stdin.write(b'position startpos\n')

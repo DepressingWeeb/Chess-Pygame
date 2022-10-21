@@ -1,10 +1,11 @@
 from utils import *
+from engine import Engine
 import pygame
 import math
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, is_playing_bot=False):
         self.start_move = (None, None)
         self.destination_move = (None, None)
         self.delay = -1
@@ -14,6 +15,11 @@ class Board:
         self.move_made_in_uci = []
         self.en_passant = (None, None)
         self.en_passant_history = []
+        self.is_playing_bot = is_playing_bot
+        if is_playing_bot:
+            self.bot = Engine()
+            self.bot.uci()
+            self.bot.set_difficulty()
         self.black_bishop_img = pygame.transform.scale(pygame.image.load('resources/resources/black_bishop.png'),
                                                        (WIDTH // 9, HEIGHT // 9))
         self.white_bishop_img = pygame.transform.scale(pygame.image.load('resources/resources/white_bishop.png'),
@@ -59,7 +65,7 @@ class Board:
         ]
         self.board_history = []
 
-    def draw_board(self,SCREEN=SCREEN):
+    def draw_board(self, SCREEN=SCREEN):
         for i in range(8):
             for j in range(8):
                 if (i + j) % 2 == 0:
@@ -77,7 +83,7 @@ class Board:
                         x, y = self.board_coordinate[i][j].bottomright
                         create_text(SCREEN, chr(97 + j), (x - 10, y - 15), fontSize=15)
 
-    def draw_pieces(self,SCREEN=SCREEN):
+    def draw_pieces(self, SCREEN=SCREEN):
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] == 'R':
@@ -126,6 +132,17 @@ class Board:
         return 0 <= row <= 7 and 0 <= col <= 7
 
     def check_mouse_input(self):
+        if self.is_playing_bot and not self.white_turn:
+            pygame.display.update()
+            is_mate, score, best_move = self.bot.find_moves_info_in_uci(self.move_made_in_uci)
+            start_move = SQUARES_REVERSED[best_move[:2]]
+            destination_move = SQUARES_REVERSED[best_move[2:4]]
+            if len(best_move) == 5:
+                promote = best_move[4]
+                self.move(start_move, destination_move, promote)
+            else:
+                self.move(start_move, destination_move)
+            return
         if pygame.mouse.get_pressed()[0] and self.delay == -1:
             x, y = pygame.mouse.get_pos()
             row, col = y // (HEIGHT // 8), x // (WIDTH // 8)
@@ -148,7 +165,7 @@ class Board:
             if self.delay == 15:
                 self.delay = -1
 
-    def move(self, start_move, destination_move,promote=None,is_analyzing=False):
+    def move(self, start_move, destination_move, promote=None, is_analyzing=False):
         row, col = destination_move
         if (row, col) in self.get_legal_moves(start_move[0], start_move[1], self.white_turn):
             self.destination_move = (row, col)
@@ -230,8 +247,6 @@ class Board:
             self.en_passant = self.en_passant_history[-1]
             self.delay = 0
             # print(len(self.board_history))
-            for board in self.board_history:
-                self.print_board(board)
             # print(self.en_passant_history)
         except:
             self.__init__()
@@ -898,7 +913,7 @@ class Board:
             pygame.display.update()
             CLOCK.tick(120)
 
-    def draw_arrow(self,SCREEN=SCREEN):
+    def draw_arrow(self, SCREEN=SCREEN):
         def arrow(screen, lcolor, tricolor, start, end, trirad, thickness=2):
             rad = math.pi / 180
             pygame.draw.line(screen, lcolor, start, end, thickness)
