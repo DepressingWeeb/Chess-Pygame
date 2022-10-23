@@ -64,6 +64,20 @@ class Board:
             ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
         ]
         self.board_history = []
+        self.map = {
+            'R': self.black_rook_img,
+            'r': self.white_rook_img,
+            'Q': self.black_queen_img,
+            'q': self.white_queen_img,
+            'K': self.black_king_img,
+            'k': self.white_king_img,
+            'P': self.black_pawn_img,
+            'p': self.white_pawn_img,
+            'N': self.black_knight_img,
+            'n': self.white_knight_img,
+            'B': self.black_bishop_img,
+            'b': self.white_bishop_img
+        }
 
     def draw_board(self, SCREEN=SCREEN):
         for i in range(8):
@@ -86,42 +100,10 @@ class Board:
     def draw_pieces(self, SCREEN=SCREEN):
         for i in range(8):
             for j in range(8):
-                if self.board[i][j] == 'R':
-                    rect = self.black_rook_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_rook_img, rect)
-                if self.board[i][j] == 'r':
-                    rect = self.white_rook_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_rook_img, rect)
-                if self.board[i][j] == 'N':
-                    rect = self.black_knight_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_knight_img, rect)
-                if self.board[i][j] == 'n':
-                    rect = self.white_knight_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_knight_img, rect)
-                if self.board[i][j] == 'B':
-                    rect = self.black_bishop_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_bishop_img, rect)
-                if self.board[i][j] == 'b':
-                    rect = self.white_bishop_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_bishop_img, rect)
-                if self.board[i][j] == 'Q':
-                    rect = self.black_queen_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_queen_img, rect)
-                if self.board[i][j] == 'q':
-                    rect = self.white_queen_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_queen_img, rect)
-                if self.board[i][j] == 'K':
-                    rect = self.black_king_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_king_img, rect)
-                if self.board[i][j] == 'k':
-                    rect = self.white_king_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_king_img, rect)
-                if self.board[i][j] == 'P':
-                    rect = self.black_pawn_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.black_pawn_img, rect)
-                if self.board[i][j] == 'p':
-                    rect = self.white_pawn_img.get_rect(center=self.board_coordinate[i][j].center)
-                    SCREEN.blit(self.white_pawn_img, rect)
+                if self.board[i][j] != '':
+                    img = self.map[self.board[i][j]]
+                    rect = img.get_rect(center=self.board_coordinate[i][j].center)
+                    SCREEN.blit(img, rect)
 
     def check_diff_side(self, row_1, col_1, row_2, col_2):
         return (self.board[row_1][col_1].islower() and self.board[row_2][col_2].isupper()) or (
@@ -197,7 +179,7 @@ class Board:
             else:
                 self.en_passant = (None, None)
                 self.en_passant_history.append(self.en_passant)
-
+            self.move_animation(start_move,destination_move)
             self.board[start_row][start_col], self.board[end_row][end_col] = '', self.board[start_row][
                 start_col]
             self.last_move = [start_move, destination_move]
@@ -214,7 +196,6 @@ class Board:
             self.start_move = (None, None)
             self.destination_move = (None, None)
             self.delay = 0
-
     def copy_board(self):
 
         tmp = []
@@ -944,3 +925,28 @@ class Board:
                 else:
                     dcenter_x -= 12
             arrow(SCREEN, YELLOW, YELLOW, self.board_coordinate[srow][scol].center, (dcenter_x, dcenter_y), 12, 8)
+
+    def move_animation(self, start_move, destination_move,SCREEN=SCREEN):
+        start_row, start_col = start_move
+        end_row, end_col = destination_move
+        x_start,y_start=self.board_coordinate[start_row][start_col].center
+        x_end,y_end=self.board_coordinate[end_row][end_col].center
+        time = 15
+        x_step=(x_end - x_start)/time
+        y_step=(y_end - y_start)/time
+        base_screen = SCREEN.copy()
+        img = self.map[self.board[start_row][start_col]]
+        for i in range(time):
+            SCREEN.fill(WHITE)
+            self.draw_board()
+            for j in range(8):
+                for k in range(8):
+                    if self.board[j][k] != '' and (j,k)!=start_move:
+                        img1 = self.map[self.board[j][k]]
+                        rect = img1.get_rect(center=self.board_coordinate[j][k].center)
+                        SCREEN.blit(img1, rect)
+            rect=img.get_rect(center=(x_start+x_step*i,y_start+y_step*i))
+            SCREEN.blit(img,rect)
+            check_quit_game()
+            pygame.display.update()
+            CLOCK.tick(60)
