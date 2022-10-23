@@ -53,7 +53,7 @@ def analysis_ui(acc_white, acc_black, count_type_white, count_type_black):
 
         check_quit_game()
         if pygame.key.get_pressed()[K_a]:
-            return SCREEN_ANALYSIS
+            return
         pygame.display.update()
         CLOCK_ANALYSIS.tick(30)
 
@@ -64,12 +64,12 @@ def analysis_detail(SCREEN, move_made, move_made_in_uci, types):
     a_board = AnalysisBoard(move_made, move_made_in_uci, types)
     CLOCK_ANALYSIS = pygame.time.Clock()
     while True:
+        SCREEN.fill(WHITE)
         a_board.draw_board(SCREEN)
         a_board.draw_arrow(SCREEN)
         a_board.draw_pieces(SCREEN)
         a_board.draw_label(SCREEN)
         a_board.check_key(SCREEN)
-        print(1)
         check_quit_game()
         pygame.display.update()
         CLOCK_ANALYSIS.tick(60)

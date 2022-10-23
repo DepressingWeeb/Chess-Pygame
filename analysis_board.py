@@ -7,7 +7,7 @@ class AnalysisBoard(Board):
         super().__init__()
         self.move_made_analysis = move_made
         self.move_made_in_uci_analysis = move_made_in_uci
-        self.index = 0
+        self.index = -1
         self.types = types
         self.best_img = pygame.image.load(r"resources\chesscom-labels\32x\best_32x.png")
         self.excellent_img = pygame.image.load(r"resources\chesscom-labels\32x\excellent_32x.png")
@@ -24,13 +24,14 @@ class AnalysisBoard(Board):
             return
         keys = pygame.key.get_pressed()
         if keys[K_LEFT]:
-            if self.index == 0:
+            self.index = max(self.index - 1, -1)
+            self.delay = 0
+            if self.index == -1:
                 self.__init__(self.move_made_analysis, self.move_made_in_uci_analysis, self.types)
             else:
                 self.undo_move()
-            self.index = max(self.index - 1, 0)
-            self.delay = 0
         elif keys[K_RIGHT]:
+            self.index = min(self.index + 1, len(self.move_made_analysis) - 1)
             if self.move_made_in_uci_analysis[self.index][-1].isdigit():
                 self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1], None, True,SCREEN)
                 self.delay = 0
@@ -38,10 +39,9 @@ class AnalysisBoard(Board):
                 self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1],
                           self.move_made_in_uci_analysis[self.index][-1], True,SCREEN)
                 self.delay = 0
-            self.index = min(self.index + 1, len(self.move_made_analysis) - 1)
 
     def draw_label(self, SCREEN=SCREEN):
-        if self.index == 0:
+        if self.index == -1:
             return
         type_dict = {
             0: self.best_img,
@@ -51,6 +51,6 @@ class AnalysisBoard(Board):
             4: self.mistake_img,
             5: self.blunder_img
         }
-        row, col = self.move_made_analysis[self.index - 1][1]
-        rect = type_dict[self.types[self.index - 1]].get_rect(center=self.board_coordinate[row][col].topright)
-        SCREEN.blit(type_dict[self.types[self.index - 1]], rect)
+        row, col = self.move_made_analysis[self.index][1]
+        rect = type_dict[self.types[self.index]].get_rect(center=self.board_coordinate[row][col].topright)
+        SCREEN.blit(type_dict[self.types[self.index]], rect)

@@ -1,4 +1,5 @@
 # TODO: Analysis (optional)
+import pygame.display
 
 
 def main_loop():
@@ -48,5 +49,6 @@ if __name__ == '__main__':
     p2.start()
     p1.join()
     p2.join()
-    SCREEN = analysis_ui(acc_white.value, acc_black.value, count_type_white, count_type_black)
+    analysis_ui(acc_white.value, acc_black.value, count_type_white, count_type_black)
+    SCREEN = pygame.display.set_mode((WIDTH,HEIGHT))
     analysis_detail(SCREEN, board.move_made, board.move_made_in_uci, types)
