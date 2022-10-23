@@ -147,7 +147,7 @@ class Board:
             if self.delay == 15:
                 self.delay = -1
 
-    def move(self, start_move, destination_move, promote=None, is_analyzing=False):
+    def move(self, start_move, destination_move, promote=None, is_analyzing=False, SCREEN=SCREEN):
         row, col = destination_move
         if (row, col) in self.get_legal_moves(start_move[0], start_move[1], self.white_turn):
             self.destination_move = (row, col)
@@ -179,7 +179,7 @@ class Board:
             else:
                 self.en_passant = (None, None)
                 self.en_passant_history.append(self.en_passant)
-            self.move_animation(start_move,destination_move)
+            self.move_animation(start_move, destination_move, SCREEN)
             self.board[start_row][start_col], self.board[end_row][end_col] = '', self.board[start_row][
                 start_col]
             self.last_move = [start_move, destination_move]
@@ -196,6 +196,7 @@ class Board:
             self.start_move = (None, None)
             self.destination_move = (None, None)
             self.delay = 0
+
     def copy_board(self):
 
         tmp = []
@@ -926,27 +927,27 @@ class Board:
                     dcenter_x -= 12
             arrow(SCREEN, YELLOW, YELLOW, self.board_coordinate[srow][scol].center, (dcenter_x, dcenter_y), 12, 8)
 
-    def move_animation(self, start_move, destination_move,SCREEN=SCREEN):
+    def move_animation(self, start_move, destination_move, SCREEN=SCREEN):
         start_row, start_col = start_move
         end_row, end_col = destination_move
-        x_start,y_start=self.board_coordinate[start_row][start_col].center
-        x_end,y_end=self.board_coordinate[end_row][end_col].center
+        x_start, y_start = self.board_coordinate[start_row][start_col].center
+        x_end, y_end = self.board_coordinate[end_row][end_col].center
         time = 15
-        x_step=(x_end - x_start)/time
-        y_step=(y_end - y_start)/time
-        base_screen = SCREEN.copy()
+        x_step = (x_end - x_start) / time
+        y_step = (y_end - y_start) / time
         img = self.map[self.board[start_row][start_col]]
+        LOCAL_CLOCK = pygame.time.Clock()
         for i in range(time):
             SCREEN.fill(WHITE)
-            self.draw_board()
+            self.draw_board(SCREEN)
             for j in range(8):
                 for k in range(8):
-                    if self.board[j][k] != '' and (j,k)!=start_move:
+                    if self.board[j][k] != '' and (j, k) != start_move:
                         img1 = self.map[self.board[j][k]]
                         rect = img1.get_rect(center=self.board_coordinate[j][k].center)
                         SCREEN.blit(img1, rect)
-            rect=img.get_rect(center=(x_start+x_step*i,y_start+y_step*i))
-            SCREEN.blit(img,rect)
+            rect = img.get_rect(center=(x_start + x_step * i, y_start + y_step * i))
+            SCREEN.blit(img, rect)
             check_quit_game()
             pygame.display.update()
-            CLOCK.tick(60)
+            LOCAL_CLOCK.tick(60)

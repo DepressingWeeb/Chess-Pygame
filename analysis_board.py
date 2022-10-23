@@ -16,7 +16,7 @@ class AnalysisBoard(Board):
         self.mistake_img = pygame.image.load(r"resources\chesscom-labels\32x\mistake_32x.png")
         self.blunder_img = pygame.image.load(r"resources\chesscom-labels\32x\blunder_32x.png")
 
-    def check_key(self):
+    def check_key(self,SCREEN=SCREEN):
         if self.delay >= 0:
             self.delay += 1
             if self.delay == 15:
@@ -32,11 +32,11 @@ class AnalysisBoard(Board):
             self.delay = 0
         elif keys[K_RIGHT]:
             if self.move_made_in_uci_analysis[self.index][-1].isdigit():
-                self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1], None, True)
+                self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1], None, True,SCREEN)
                 self.delay = 0
             else:
                 self.move(self.move_made_analysis[self.index][0], self.move_made_analysis[self.index][1],
-                          self.move_made_in_uci_analysis[self.index][-1], True)
+                          self.move_made_in_uci_analysis[self.index][-1], True,SCREEN)
                 self.delay = 0
             self.index = min(self.index + 1, len(self.move_made_analysis) - 1)
 
