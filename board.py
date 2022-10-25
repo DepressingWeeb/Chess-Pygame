@@ -142,6 +142,8 @@ class Board:
                     self.move(self.start_move, (row, col))
         if pygame.key.get_pressed()[K_u] and self.delay == -1:
             self.undo_move()
+            if self.is_playing_bot:
+                self.undo_move()
         if self.delay >= 0:
             self.delay += 1
             if self.delay == 15:
@@ -207,13 +209,14 @@ class Board:
             tmp.append(lst_tmp)
         self.board_history.append(tmp)
 
-    def undo_move(self):
+    def undo_move(self,SCREEN=SCREEN):
         try:
             self.white_turn = not self.white_turn
             self.start_move = (None, None)
             self.destination_move = (None, None)
             self.last_move = [(None, None), (None, None)]
-            self.move_made.pop()
+            last_move = self.move_made.pop()
+            self.move_animation(last_move[1], last_move[0],SCREEN)
             self.move_made_in_uci.pop()
             self.board_history.pop()
             # self.board=self.board_history[-1].copy()
@@ -230,7 +233,7 @@ class Board:
             self.delay = 0
             # print(len(self.board_history))
             # print(self.en_passant_history)
-        except:
+        except IndexError:
             self.__init__()
 
     def print_board(self, board):

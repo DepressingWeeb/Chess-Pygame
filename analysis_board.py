@@ -29,7 +29,7 @@ class AnalysisBoard(Board):
             if self.index == -1:
                 self.__init__(self.move_made_analysis, self.move_made_in_uci_analysis, self.types)
             else:
-                self.undo_move()
+                self.undo_move(SCREEN)
         elif keys[K_RIGHT]:
             self.index = min(self.index + 1, len(self.move_made_analysis) - 1)
             if self.move_made_in_uci_analysis[self.index][-1].isdigit():
