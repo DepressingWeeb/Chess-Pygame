@@ -1,11 +1,14 @@
 import multiprocessing
+import sys
 
 from engine import Engine
 
 
-def analysis(moves_made_in_uci, q, acc_white, acc_black, count_type_white, count_type_black, types):
+def analysis(moves_made_in_uci, q, acc_white, acc_black, count_type_white, count_type_black, types,is_terminate):
     stockfish = Engine()
     for i in range(len(moves_made_in_uci)):
+        if is_terminate.value == 1:
+            sys.exit()
         is_mate, best_move_eval, best_move = stockfish.find_moves_info_in_uci(moves_made_in_uci[:i])
         is_mate_2, your_move_eval, next_best_move = stockfish.find_moves_info_in_uci(moves_made_in_uci[:i + 1])
         if best_move == moves_made_in_uci[i]:

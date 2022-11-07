@@ -4,7 +4,7 @@ from utils import *
 from analysis_board import AnalysisBoard
 
 
-def analysis_waiting(moves_count, q):
+def analysis_waiting(moves_count, q,is_terminate):
     val = 0
     pygame.init()
     while True:
@@ -15,7 +15,12 @@ def analysis_waiting(moves_count, q):
                 pygame.quit()
                 break
         create_text(SCREEN, f'{val}/{moves_count - 1}', (WIDTH // 2, HEIGHT // 2), BLACK, 50)
-        check_quit_game()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                is_terminate.value=1
+                pygame.quit()
+                sys.exit()
+
         pygame.display.update()
         CLOCK.tick(20)
 

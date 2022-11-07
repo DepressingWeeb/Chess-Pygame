@@ -1,3 +1,5 @@
+import time
+from copy import deepcopy
 from utils import *
 from engine import Engine
 import pygame
@@ -5,7 +7,7 @@ import math
 
 
 class Board:
-    def __init__(self, is_playing_bot=False):
+    def __init__(self, is_playing_bot=False, time_control=10, bonus_time=0):
         self.start_move = (None, None)
         self.destination_move = (None, None)
         self.delay = -1
@@ -16,6 +18,10 @@ class Board:
         self.en_passant = (None, None)
         self.en_passant_history = []
         self.is_playing_bot = is_playing_bot
+        self.white_time = time_control
+        self.black_time = time_control
+        self.bonus_time = bonus_time
+        self.time_start = time.perf_counter()
         if is_playing_bot:
             self.bot = Engine()
             self.bot.uci()
@@ -149,6 +155,7 @@ class Board:
             if self.delay == 15:
                 self.delay = -1
 
+    # method to make a move from start_move=(row1,col1) to destination_move=(row2,col2),potentally have a promotion
     def move(self, start_move, destination_move, promote=None, is_analyzing=False, SCREEN=SCREEN):
         row, col = destination_move
         if (row, col) in self.get_legal_moves(start_move[0], start_move[1], self.white_turn):
@@ -181,16 +188,22 @@ class Board:
             else:
                 self.en_passant = (None, None)
                 self.en_passant_history.append(self.en_passant)
+            # animate move
             self.move_animation(start_move, destination_move, SCREEN)
+            # 'move' by replace the start_move position with '' and the destination_move position with the piece/pawn
+            # at the starting position
             self.board[start_row][start_col], self.board[end_row][end_col] = '', self.board[start_row][
                 start_col]
+            # initialized after making a move
             self.last_move = [start_move, destination_move]
             self.move_made.append(self.last_move)
             self.move_made_in_uci.append(SQUARES[start_move] + SQUARES[destination_move])
+            # check for promotion
             if self.board[end_row][end_col].lower() == 'p' and (end_row == 7 or end_row == 0):
                 self.board[end_row][end_col] = promote if promote is not None else self.pawn_promotion(end_row, end_col)
                 self.move_made_in_uci[-1] += self.board[end_row][end_col]
-            self.copy_board()
+            copy = deepcopy(self.board)
+            self.board_history.append(copy)
             self.white_turn = not self.white_turn
             if self.is_checkmate() and not is_analyzing:
                 pygame.quit()
@@ -199,27 +212,16 @@ class Board:
             self.destination_move = (None, None)
             self.delay = 0
 
-    def copy_board(self):
-
-        tmp = []
-        for i in range(8):
-            lst_tmp = []
-            for j in range(8):
-                lst_tmp.append(self.board[i][j])
-            tmp.append(lst_tmp)
-        self.board_history.append(tmp)
-
-    def undo_move(self,SCREEN=SCREEN):
+    def undo_move(self, SCREEN=SCREEN):
         try:
             self.white_turn = not self.white_turn
             self.start_move = (None, None)
             self.destination_move = (None, None)
             self.last_move = [(None, None), (None, None)]
             last_move = self.move_made.pop()
-            self.move_animation(last_move[1], last_move[0],SCREEN)
+            self.move_animation(last_move[1], last_move[0], SCREEN)
             self.move_made_in_uci.pop()
             self.board_history.pop()
-            # self.board=self.board_history[-1].copy()
             tmp = []
             for i in range(8):
                 lst_tmp = []
@@ -231,8 +233,6 @@ class Board:
             self.en_passant_history.pop()
             self.en_passant = self.en_passant_history[-1]
             self.delay = 0
-            # print(len(self.board_history))
-            # print(self.en_passant_history)
         except IndexError:
             self.__init__()
 
@@ -532,6 +532,7 @@ class Board:
             center = self.board_coordinate[row][col].center
             pygame.draw.circle(SCREEN, GREEN, center, 10)
 
+    # method to get the attack squares of the piece ,including the squares of the blocking pieces of the same side
     def get_attack_square(self, row, col):
         attack_square = []
         if row is None or col is None:
@@ -760,7 +761,6 @@ class Board:
             return False
 
     def is_checkmate(self):
-        # return False
         if self.is_in_check():
             if self.white_turn:
                 legal_moves = []
@@ -898,6 +898,7 @@ class Board:
             pygame.display.update()
             CLOCK.tick(120)
 
+    # draw the arrow to display surface depends ond the last move
     def draw_arrow(self, SCREEN=SCREEN):
         def arrow(screen, lcolor, tricolor, start, end, trirad, thickness=2):
             rad = math.pi / 180
@@ -930,6 +931,7 @@ class Board:
                     dcenter_x -= 12
             arrow(SCREEN, YELLOW, YELLOW, self.board_coordinate[srow][scol].center, (dcenter_x, dcenter_y), 12, 8)
 
+    # method to animate the move for UI purposes
     def move_animation(self, start_move, destination_move, SCREEN=SCREEN):
         start_row, start_col = start_move
         end_row, end_col = destination_move
@@ -943,6 +945,8 @@ class Board:
         for i in range(time):
             SCREEN.fill(WHITE)
             self.draw_board(SCREEN)
+            if type(self)==Board:
+                self.display_time(SCREEN)
             for j in range(8):
                 for k in range(8):
                     if self.board[j][k] != '' and (j, k) != start_move:
@@ -954,3 +958,27 @@ class Board:
             check_quit_game()
             pygame.display.update()
             LOCAL_CLOCK.tick(60)
+
+    @staticmethod
+    def convert_time(float_time):
+        minute = int(float_time // 60)
+        second = int(float_time) - minute * 60
+        milisecond = int((float_time - int(float_time)) * 100)
+        return f'{minute:02d}:{second:02d}:{milisecond:02d}'
+
+    # display the time onto the display surface
+    def display_time(self, SCREEN=SCREEN):
+        if self.white_turn:
+            self.white_time = self.white_time - (time.perf_counter() - self.time_start)
+            self.time_start = time.perf_counter()
+        else:
+            self.black_time = self.black_time - (time.perf_counter() - self.time_start)
+            self.time_start = time.perf_counter()
+        white_time_rect = create_rect(SCREEN, 750, 450, 150, 50, BLACK, 3)
+        black_time_rect = create_rect(SCREEN, 750, 150, 150, 50, BLACK, 3)
+        create_text_center(SCREEN, self.convert_time(self.white_time), white_time_rect.center, BLACK, 30)
+        create_text_center(SCREEN, self.convert_time(self.black_time), black_time_rect.center, BLACK, 30)
+
+    def check_timeout(self):
+        if self.black_time <= 0 or self.white_time <= 0:
+            pygame.quit()
